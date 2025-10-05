@@ -25,6 +25,11 @@ if data_path.exists():
 else:
     print(f"⚠️ File not found at {data_path}")
 
+@app.options("/")
+async def options():
+    return {}
+
+
 @app.get("/")
 def root():
     return {"message": "FastAPI app deployed successfully!"}
