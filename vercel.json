@@ -1,8 +1,8 @@
 {
   "builds": [
-    { "src": "api/metrics.py", "use": "@vercel/python" }
+    { "src": "vercel-latency-api/metrics.py", "use": "@vercel/python" }
   ],
   "routes": [
-    { "src": "/.*", "dest": "/api/metrics.py" }
+    { "src": "/.*", "dest": "/vercel-latency-api/metrics.py" }
   ]
 }
