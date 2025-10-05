@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/metrics.py": {
+      "runtime": "python3.11"
+    }
+  },
+  "routes": [
+    { "src": "/.*", "dest": "/api/metrics.py" }
+  ]
+}
