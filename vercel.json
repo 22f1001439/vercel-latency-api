@@ -4,5 +4,7 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "metrics.py" }
-  ]
+  ],
+  "regions": ["bom1", "sin1", "sin2"],
+  "threshold_ms": 180
 }
