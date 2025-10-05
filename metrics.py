@@ -62,48 +62,31 @@ async def metrics(request: Request):
     body = await request.json()
     regions = body.get("regions", [])
     threshold = body.get("threshold_ms", 180)
-    group_by_service = body.get("group_by_service", False)
 
-    response = {}
+    regions_data = []
     
     for region in regions:
-        region_data = [r for r in telemetry if r["region"] == region]
-        if not region_data:
+        region_entries = [r for r in telemetry if r["region"] == region]
+        if not region_entries:
             continue
 
-        if group_by_service:
-            # Group by service
-            services = {}
-            for entry in region_data:
-                service = entry.get("service", "unknown")
-                if service not in services:
-                    services[service] = []
-                services[service].append(entry)
-            
-            response[region] = {}
-            for service, entries in services.items():
-                latencies = [e["latency_ms"] for e in entries]
-                uptimes = [e["uptime_pct"] for e in entries]
-                
-                response[region][service] = {
-                    "avg_latency": round(float(np.mean(latencies)), 2),
-                    "p95_latency": round(float(np.percentile(latencies, 95)), 2),
-                    "avg_uptime": round(float(np.mean(uptimes)), 3),
-                    "breaches": sum(l > threshold for l in latencies)
-                }
-        else:
-            # Aggregate all services
-            latencies = [r["latency_ms"] for r in region_data]
-            uptimes = [r["uptime_pct"] for r in region_data]
+        latencies = [r["latency_ms"] for r in region_entries]
+        uptimes = [r["uptime_pct"] for r in region_entries]
 
-            response[region] = {
-                "avg_latency": round(float(np.mean(latencies)), 2),
-                "p95_latency": round(float(np.percentile(latencies, 95)), 2),
-                "avg_uptime": round(float(np.mean(uptimes)), 3),
-                "breaches": sum(l > threshold for l in latencies)
-            }
+        avg_latency = round(float(np.mean(latencies)), 2)
+        p95_latency = round(float(np.percentile(latencies, 95)), 2)
+        avg_uptime = round(float(np.mean(uptimes)), 3)
+        breaches = sum(l > threshold for l in latencies)
+
+        regions_data.append({
+            "region": region,
+            "avg_latency": avg_latency,
+            "p95_latency": p95_latency,
+            "avg_uptime": avg_uptime,
+            "breaches": breaches
+        })
 
     return JSONResponse(
-        content=response,
+        content={"regions": regions_data},
         headers={"Access-Control-Allow-Origin": "*"}
     )
