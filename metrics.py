@@ -28,6 +28,9 @@ else:
 @app.get("/")
 def root():
     return {"message": "FastAPI app deployed successfully!"}
+@app.options("/")
+async def options():
+    return {}
 
 
 @app.post("/")
