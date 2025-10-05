@@ -25,6 +25,11 @@ if data_path.exists():
 else:
     print(f"⚠️ File not found at {data_path}")
 
+@app.get("/")
+def root():
+    return {"message": "FastAPI app deployed successfully!"}
+
+
 @app.post("/")
 async def metrics(request: Request):
     # If telemetry wasn't loaded at startup, try again on first call
@@ -60,5 +65,6 @@ async def metrics(request: Request):
             "avg_uptime": round(avg_uptime, 3),
             "breaches": breaches
         }
+
 
     return response
