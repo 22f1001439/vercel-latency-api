@@ -6,11 +6,11 @@ from pathlib import Path
 
 app = FastAPI()
 
-# Enable CORS
+# Enable CORS for all methods
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["POST"],
+    allow_methods=["*"],   # Allow all HTTP methods including OPTIONS
     allow_headers=["*"],
 )
 
@@ -25,22 +25,19 @@ if data_path.exists():
 else:
     print(f"⚠️ File not found at {data_path}")
 
-@app.options("/")
-async def options():
+# Catch-all OPTIONS handler for preflight
+@app.options("/{path:path}")
+async def options_handler(path: str):
     return {}
 
-
+# GET endpoint for quick testing
 @app.get("/")
 def root():
     return {"message": "FastAPI app deployed successfully!"}
-@app.options("/")
-async def options():
-    return {}
 
-
+# POST endpoint for metrics
 @app.post("/")
 async def metrics(request: Request):
-    # If telemetry wasn't loaded at startup, try again on first call
     global telemetry
     if not telemetry:
         if data_path.exists():
@@ -73,6 +70,5 @@ async def metrics(request: Request):
             "avg_uptime": round(avg_uptime, 3),
             "breaches": breaches
         }
-
 
     return response
