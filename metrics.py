@@ -14,13 +14,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load telemetry bundle once
-data_path = Path(__file__).resolve().parent.parent / "q-vercel-latency.json"
-with open(data_path) as f:
-    telemetry = json.load(f)
+# Path to JSON file (assumed to be in same folder as metrics.py)
+data_path = Path(__file__).parent / "q-vercel-latency.json"
+
+# Load telemetry if available
+telemetry = []
+if data_path.exists():
+    with open(data_path, "r") as f:
+        telemetry = json.load(f)
+else:
+    print(f"⚠️ File not found at {data_path}")
 
 @app.post("/")
 async def metrics(request: Request):
+    # If telemetry wasn't loaded at startup, try again on first call
+    global telemetry
+    if not telemetry:
+        if data_path.exists():
+            with open(data_path, "r") as f:
+                telemetry = json.load(f)
+        else:
+            return {"error": f"File not found at {data_path.name}"}
+
     body = await request.json()
     regions = body.get("regions", [])
     threshold = body.get("threshold_ms", 180)
@@ -28,11 +43,11 @@ async def metrics(request: Request):
     response = {}
     for region in regions:
         region_data = [r for r in telemetry if r["region"] == region]
-        latencies = [r["latency_ms"] for r in region_data]
-        uptimes = [r["uptime_pct"] for r in region_data]
-
         if not region_data:
             continue
+
+        latencies = [r["latency_ms"] for r in region_data]
+        uptimes = [r["uptime_pct"] for r in region_data]
 
         avg_latency = float(np.mean(latencies))
         p95_latency = float(np.percentile(latencies, 95))
